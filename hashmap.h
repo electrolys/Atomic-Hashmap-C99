@@ -121,7 +121,7 @@ hshm_bucket* new_bucket(void* key,void* val,hshm_bucket* next,int keysize){
     hshm_bucket* b = malloc(sizeof(*b));
     b->val = val;
     b->next = next;
-    memcpy(b->key,key,keysize);
+    HSHM_MEMCPY(b->key,key,keysize);
 
     return b;
 }
@@ -129,7 +129,7 @@ hshm_bucket* new_bucket(void* key,void* val,hshm_bucket* next,int keysize){
 hshm_bucket* keylist_get(hshm_bucket* start,void* key,int keysize){
     hshm_bucket* b;
     for (b = start;b;b=b->next)
-        if (!memcmp(key,b->key,keysize))
+        if (!HSHM_MEMCMP(key,b->key,keysize))
             break;
     return b?b->val:NULL;
 }
@@ -143,12 +143,12 @@ retry:
         if (HSHM_CASPTR(start,NULL,t))return NULL;
         goto retry;
     }
-    if (!memcmp(key,prev->key,keysize)){
+    if (!HSHM_MEMCMP(key,prev->key,keysize)){
         free(t);
         return HSHM_SWAPPTR(&prev->val,val);
     }
     for (hshm_bucket* node = prev->next;node;node=node->next){
-        if (!memcmp(key,node->key,keysize)){
+        if (!HSHM_MEMCMP(key,node->key,keysize)){
             free(t);
             return HSHM_SWAPPTR(&node->val,val);
         }
@@ -165,7 +165,7 @@ hshm_bucket* keylist_del(hshm_bucket** start,void* key,int keysize){
 retry:
     prev=NULL;
     for (b = *start;b;b=b->next){
-        if (!memcmp(key,b->key,keysize))
+        if (!HSHM_MEMCMP(key,b->key,keysize))
             break;
         prev = b;
     }
