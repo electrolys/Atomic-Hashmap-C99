@@ -76,14 +76,14 @@ void hshm_listfree(hshm_link** list){
     for (hshm_link* l = *list;l;){
         hshm_link* t = l;
         l = t->next;
-        if (t->val) free(t->val);
-        free(t);
+        if (t->val) HSHM_MEMFREE(t->val);
+        HSHM_MEMFREE(t);
     }
     *list = NULL;
 }
 
 hshm_link* new_link(void* val,hshm_link* next){
-    hshm_link* l = malloc(sizeof(*l));
+    hshm_link* l = HSHM_MEMALLOC(sizeof(*l));
     l->val = val;
     l->next = next;
     return l;
@@ -111,14 +111,14 @@ void free_keylist(hshm_bucket** start){ // not thread safe
     for (hshm_bucket* p = *start;p;){
         hshm_bucket* t = p;
         p = t->next;
-        free(t);
+        HSHM_MEMFREE(t);
     }
     *start = NULL;
 }
 
 
 hshm_bucket* new_bucket(void* key,void* val,hshm_bucket* next,int keysize){
-    hshm_bucket* b = malloc(sizeof(*b));
+    hshm_bucket* b = HSHM_MEMALLOC(sizeof(*b));
     b->val = val;
     b->next = next;
     HSHM_MEMCPY(b->key,key,keysize);
@@ -144,12 +144,12 @@ retry:
         goto retry;
     }
     if (!HSHM_MEMCMP(key,prev->key,keysize)){
-        free(t);
+        HSHM_MEMFREE(t);
         return HSHM_SWAPPTR(&prev->val,val);
     }
     for (hshm_bucket* node = prev->next;node;node=node->next){
         if (!HSHM_MEMCMP(key,node->key,keysize)){
-            free(t);
+            HSHM_MEMFREE(t);
             return HSHM_SWAPPTR(&node->val,val);
         }
         prev = node;
@@ -175,13 +175,13 @@ retry:
 }
 
 hshm_map* hshm_newmap(int numbuckets, int keysize, int threadlocknum, unsigned (*hash)(void*)){
-    hshm_map* map = malloc(sizeof(*map));
+    hshm_map* map = HSHM_MEMALLOC(sizeof(*map));
     map->numbuckets = numbuckets;
     map->keysize = keysize;
     map->numlocks = threadlocknum;
-    map->locks = malloc(sizeof(HSHM_LOCK_T)*threadlocknum);
+    map->locks = HSHM_MEMALLOC(sizeof(HSHM_LOCK_T)*threadlocknum);
     for (int i = 0 ; i < threadlocknum; i++) HSHM_LNULL(map->locks[i]);
-    map->buckets = malloc(sizeof(hshm_bucket*)*numbuckets);
+    map->buckets = HSHM_MEMALLOC(sizeof(hshm_bucket*)*numbuckets);
     for (int i = 0 ; i < numbuckets; i++) map->buckets[i]=NULL;
     map->freebuf=NULL;
     map->hash = hash;
@@ -204,9 +204,9 @@ void hshm_freemap(hshm_map* map) {//not thread safe of course
     for (int i = 0 ; i < map->numbuckets ; i++)
         free_keylist(&map->buckets[i]);
     hshm_clearfree(map);
-    free(map->buckets);
-    free(map->locks);
-    free(map);
+    HSHM_MEMFREE(map->buckets);
+    HSHM_MEMFREE(map->locks);
+    HSHM_MEMFREE(map);
 
 }
 

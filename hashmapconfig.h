@@ -21,3 +21,5 @@
 
 #define HSHM_MEMCMP memcmp
 #define HSHM_MEMCPY memcpy
+#define HSHM_MEMALLOC malloc
+#define HSHM_MEMFREE free
